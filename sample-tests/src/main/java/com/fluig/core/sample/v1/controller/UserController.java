@@ -1,4 +1,4 @@
-package com.fluig.core.sample.controller;
+package com.fluig.core.sample.v1.controller;
 
 
 import java.net.URI;
@@ -12,44 +12,59 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fluig.core.sample.domain.SampleUser;
 import com.fluig.core.sample.exception.UserException;
 import com.fluig.core.sample.service.SampleUserService;
+import com.fluig.core.sample.v1.converter.UserConverter;
+import com.fluig.core.sample.v1.dto.UserDTO;
 
 @RestController
-@RequestMapping("/users")
-public class SampleController {
+@RequestMapping("/v1/users")
+public class UserController {
 
     @Autowired
     private SampleUserService service;
 
     @RequestMapping(method = RequestMethod.GET)
     public @ResponseBody
-    Iterable<SampleUser> getUsers() {
-        return service.findAll();
+    Iterable<UserDTO> getUsers() {
+        return UserConverter.toUserDTO(service.findAll());
     }
 
     @RequestMapping(value = "{id}", method = RequestMethod.GET)
     public @ResponseBody
-    SampleUser getUserById(@PathVariable("id") String id) {
-        return service.findById(id);
+    UserDTO getUserById(@PathVariable("id") String id) {
+        return UserConverter.toUserDTO(service.findById(id));
+    }
+
+    @RequestMapping(value = "{name}/name", method = RequestMethod.GET)
+    public @ResponseBody
+    Iterable<UserDTO> getUserByName(@PathVariable("name") String name) {
+        return UserConverter.toUserDTO(service.findByNameContainingIgnoreCase(name));
+    }
+
+    @RequestMapping(value = "{lastName}/last", method = RequestMethod.GET)
+    public @ResponseBody
+    Iterable<UserDTO> getUserByLastName(@PathVariable("lastName") String lastName) {
+        return UserConverter.toUserDTO(service.findByLastNameContainingIgnoreCase(lastName));
     }
 
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity create(@RequestBody SampleUser user) {
+    public ResponseEntity create(@RequestBody UserDTO user) {
         try {
-            SampleUser createUser = service.create(user);
-            return ResponseEntity.created(new URI("/users/" + createUser.getId())).body(createUser);
+            UserDTO createUser = UserConverter.toUserDTO(
+                    service.create(UserConverter.toSampleUser(user)));
+            return ResponseEntity.created(new URI("/v1/users/" + createUser.getId())).body(createUser);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.PUT)
-    public ResponseEntity update(@PathVariable("id") String id, @RequestBody SampleUser user) {
+    public ResponseEntity update(@PathVariable("id") String id, @RequestBody UserDTO user) {
         try {
             user.setId(id);
-            SampleUser update = service.update(user);
+            UserDTO update = UserConverter.toUserDTO(
+                    service.update(UserConverter.toSampleUser(user)));
             return ResponseEntity.ok(update);
         } catch (UserException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

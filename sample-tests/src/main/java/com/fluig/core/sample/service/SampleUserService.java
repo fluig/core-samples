@@ -1,5 +1,6 @@
 package com.fluig.core.sample.service;
 
+import java.util.List;
 import java.util.UUID;
 
 import javax.persistence.EntityNotFoundException;
@@ -83,5 +84,13 @@ public class SampleUserService {
             throw new EntityNotFoundException("user not found with id " + id);
         }
         return user;
+    }
+
+    public List<SampleUser> findByNameContainingIgnoreCase(String name) {
+        return repository.findByNameContainingIgnoreCase(name);
+    }
+
+    public List<SampleUser> findByLastNameContainingIgnoreCase(String name) {
+        return repository.findByLastNameContainingIgnoreCase(name);
     }
 }
